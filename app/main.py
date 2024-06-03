@@ -47,7 +47,6 @@ def remove_item_from_cart(customer_id: int, product_id: int):
 
 @router.post("/cart/apply-coupon/")
 def apply_coupon(customer_id: int, coupon_code : schemas.CouponCode):
-    print("AC", customer_id, coupon_code)
     crud.apply_coupon_to_cart(customer_id, coupon_code.coupon_code)
     return {"message": "Coupon applied to cart"}
 

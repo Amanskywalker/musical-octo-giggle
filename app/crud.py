@@ -53,7 +53,6 @@ def add_to_cart(customer_id: int, item: CartItem):
     
     update_cart_total(customer_cart)
     customer_carts[customer_id] = customer_cart
-    print("add : ",customer_carts)
 
 def remove_from_cart(customer_id: int, product_id: int):
     if customer_id not in customers:
@@ -72,7 +71,6 @@ def remove_from_cart(customer_id: int, product_id: int):
     
     update_cart_total(customer_cart)
     customer_carts[customer_id] = customer_cart
-    print("remove", customer_carts)
 
 def clear_cart(customer_id: int):
     if customer_id not in customers:
@@ -92,8 +90,6 @@ def get_cart(customer_id: int):
 def apply_coupon_to_cart(customer_id: int, coupon_code):
     if customer_id not in customers:
         raise HTTPException(status_code=404, detail="Customer not found")
-
-    print("AC", customer_id, coupon_code)
 
     customer = customers[customer_id]
     if customer.coupon_code == coupon_code:
@@ -121,8 +117,7 @@ def create_order(customer_id):
     order_count[customer_id] += 1
     order_id = get_next_id(orders)
 
-    customer_cart = customer_carts.get(customer_id)    
-    print("o1 here", customer_cart)
+    customer_cart = customer_carts.get(customer_id)
 
     # convert items in the cart into order items
     order_items = []
@@ -131,8 +126,6 @@ def create_order(customer_id):
         order_items.append(order_item)
     
     customer = customers[customer_id]
-    
-    print("o2 here", order_items, customer)
 
     order_total_value = customer_cart.total_value
     order_coupon_code = None
@@ -158,7 +151,6 @@ def create_order(customer_id):
     # clear the cart after converting it into an order
     clear_cart(customer_id)
     
-    print("order", new_order)
     return new_order
 
 def get_product(product_id: int):
@@ -193,7 +185,6 @@ def get_store_statistics():
     }
 
 def admin_generate_discount_code(customer_id):
-    print(customer_id)
     if customer_id in order_count and order_count[customer_id] % nth_order == 0:
         customer = customers[customer_id]
         if customer.coupon_code is None:

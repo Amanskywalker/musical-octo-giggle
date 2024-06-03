@@ -147,7 +147,6 @@ def test_store_statistics():
     response = client.get("/admin/store-statistics/")
     assert response.status_code == 200
     stats = response.json()
-    print(stats)
     assert "total_items_purchased" in stats
     assert "total_purchase_amount" in stats
     assert "discount_codes" in stats
