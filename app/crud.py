@@ -8,7 +8,8 @@ products = {}
 customers = {}
 customer_carts = {}
 orders = {}
-order_count = 0
+discount_codes = {}
+order_count = {}
 nth_order = 5  # nth order
 
 def get_next_id(store):
@@ -112,8 +113,12 @@ def send_coupon_email(customer: Customer, coupon_code: str):
     print(f"Sending email to {customer.email} with coupon code: {coupon_code}")
 
 def create_order(customer_id):
-    global order_count
-    order_count += 1
+    global nth_order
+
+    if customer_id not in order_count:
+        order_count[customer_id] = 0
+
+    order_count[customer_id] += 1
     order_id = get_next_id(orders)
 
     customer_cart = customer_carts.get(customer_id)    
@@ -135,6 +140,7 @@ def create_order(customer_id):
     # Apply the coupon code if it's valid and applied on the cart
     if customer_cart.coupon_code and customer_cart.coupon_code == customer.coupon_code:
         order_total_value = customer_cart.total_value * 0.9  # 10% discount
+        discount_codes[customer.coupon_code] = customer_cart.total_value * 0.1
         order_coupon_code = customer_cart.coupon_code
         customer.coupon_code = None  # clear the coupon code after use
 
@@ -142,7 +148,7 @@ def create_order(customer_id):
                       coupon_code=order_coupon_code, items=order_items)
     
     # generate a new coupon code for each nth order
-    if order_count % nth_order == 0:
+    if order_count[customer_id] % nth_order == 0:
         coupon_code = generate_coupon_code()
         customer.coupon_code = coupon_code
         send_coupon_email(customer, coupon_code)
@@ -172,3 +178,29 @@ def get_customers(skip: int = 0, limit: int = 10):
 
 def get_orders(skip: int = 0, limit: int = 10):
     return list(orders.values())[skip:skip+limit]
+
+def get_store_statistics():
+    total_items_purchased = sum(item.quantity for order in orders.values() for item in order.items)
+    total_purchase_amount = sum(order.total_value for order in orders.values())
+    total_discount_amount = sum(discount_codes.values())
+    discount_code_list = list(discount_codes.keys())
+    
+    return {
+        "total_items_purchased": total_items_purchased,
+        "total_purchase_amount": total_purchase_amount,
+        "discount_codes": discount_code_list,
+        "total_discount_amount": total_discount_amount
+    }
+
+def admin_generate_discount_code(customer_id):
+    print(customer_id)
+    if customer_id in order_count and order_count[customer_id] % nth_order == 0:
+        customer = customers[customer_id]
+        if customer.coupon_code is None:
+            # generate coupon code only if customer didn't have a coupon code
+            coupon_code = generate_coupon_code()
+            customer.coupon_code = coupon_code
+            send_coupon_email(customer, coupon_code)
+            return True
+    
+    return False

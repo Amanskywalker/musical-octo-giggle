@@ -68,5 +68,17 @@ def read_order(order_id: int):
 
 @router.post("/orders/")
 def place_order(customer_id: int):
-    print("OM", customer_id)
     return crud.create_order(customer_id)
+
+# admin functions
+@router.post("/admin/generate-discount-code/")
+def generate_discount_code(customer_id: int):
+    result = crud.admin_generate_discount_code(customer_id)
+    if result:
+        return {"message": "Discount codes generated"}
+    else:
+        return {"message": "Discount codes generation failed"}
+
+@router.get("/admin/store-statistics/")
+def store_statistics():
+    return crud.get_store_statistics()

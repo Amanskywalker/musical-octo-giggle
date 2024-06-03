@@ -8,7 +8,7 @@ client = TestClient(app)
 
 # data setup
 def setup_module(module):
-    global products, customers, order_count
+    global products, customers, order_count, n
     crud.products = {
         1: Product(id=1, name="Product 1", price=10.0),
         2: Product(id=2, name="Product 2", price=15.0)
@@ -16,7 +16,7 @@ def setup_module(module):
     crud.customers = {
         1: Customer(id=1, name="Customer 1", phone="1234567890", address="123 Main St", email="customer1@example.com")
     }
-    crud.order_count = 0
+    crud.order_count[1] = 0
 
 def test_add_item_to_cart():
     response = client.post("/cart/add/?customer_id=1", json={"product_id": 1, "quantity": 2})
@@ -103,7 +103,7 @@ def test_place_order_with_valid_coupon():
     assert cart["coupon_code"] is None
 
 def test_place_order_without_coupon():
-    # # add item to cart
+    # add item to cart
     client.post("/cart/add/?customer_id=1", json={"product_id": 1, "quantity": 2})
 
     response = client.post("/orders/?customer_id=1")
@@ -118,3 +118,37 @@ def test_place_order_without_coupon():
     assert len(cart["items"]) == 0
     assert cart["total_value"] == 0
     assert cart["coupon_code"] is None
+
+def test_generate_discount_code():
+    crud.order_count[1] = crud.nth_order # customer order count set to nth_order
+    crud.customers[1].coupon_code = None
+
+    response = client.post("/admin/generate-discount-code/?customer_id=1")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Discount codes generated"}
+
+def test_generate_discount_code_for_n_plus_1_order():
+    crud.order_count[1] = crud.nth_order+1 # customer order count set to nth + 1 order
+    crud.customers[1].coupon_code = None
+
+    response = client.post("/admin/generate-discount-code/?customer_id=1")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Discount codes generation failed"}
+
+def test_generate_discount_code_for_existing_coupon_code():
+    crud.order_count[1] = crud.nth_order # customer order count set to nth_order
+    crud.customers[1].coupon_code = "VALIDCOUPON" # customer has the existing coupon code
+
+    response = client.post("/admin/generate-discount-code/?customer_id=1")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Discount codes generation failed"}
+
+def test_store_statistics():
+    response = client.get("/admin/store-statistics/")
+    assert response.status_code == 200
+    stats = response.json()
+    print(stats)
+    assert "total_items_purchased" in stats
+    assert "total_purchase_amount" in stats
+    assert "discount_codes" in stats
+    assert "total_discount_amount" in stats
