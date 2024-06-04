@@ -1,6 +1,9 @@
 from typing import List, Optional
 from pydantic import BaseModel
 
+
+# Base models for the API inputs
+
 class ProductBase(BaseModel):
     name: str
     price: float

@@ -5,6 +5,7 @@ from app.models import CartItem
 
 router = APIRouter()
 
+# User end points
 @router.get("/products/", response_model=List[schemas.Product])
 def read_products(skip: int = 0, limit: int = 10):
     return crud.get_products(skip=skip, limit=limit)
@@ -69,7 +70,7 @@ def read_order(order_id: int):
 def place_order(customer_id: int):
     return crud.create_order(customer_id)
 
-# admin functions
+# admin endpoints
 @router.post("/admin/generate-discount-code/")
 def generate_discount_code(customer_id: int):
     result = crud.admin_generate_discount_code(customer_id)
